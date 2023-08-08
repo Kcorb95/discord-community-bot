@@ -1,0 +1,33 @@
+const { Command } = require('discord.js-commando');
+const { stripIndents } = require('common-tags');
+const Username = require('../../models/UserName');
+
+module.exports = class UserInfoCommand extends Command {
+  constructor(client) {
+    super(client, {
+      name: 'aliases',
+      group: 'info',
+      memberName: 'aliases',
+      description: 'Get a user\'s past usernames.',
+      throttling: {
+        usages: 2,
+        duration: 3
+      },
+      args: [
+        {
+          key: 'member',
+          prompt: 'what user would you like to have information on?\n',
+          type: 'member'
+        }
+      ]
+    });
+  }
+
+  async run(msg, args) {
+    const Usernames = await Username.findAll({ where: { userID: args.member.id } });
+    return msg.reply(stripIndents`
+			Alises for the user ${args.member.displayName}:
+			${Usernames.length ? Usernames.map(uName => uName.username).join(', ') : args.member.user.username}
+			`, { split: true });
+  }
+};

@@ -1,0 +1,37 @@
+const { Command } = require('discord.js-commando');
+const guildSettings = require('../../models/GuildSettings');
+
+module.exports = class ServerLogsChannelCommand extends Command {
+  constructor(client) {
+    super(client, {
+      name: 'togglelogs',
+      group: 'config',
+      memberName: 'togglelogs',
+      description: 'Enables or disables welcome messages.',
+      guildOnly: true,
+      examples: [
+        'togglelogs enable'
+      ],
+      args: [
+        {
+          key: 'enabled',
+          prompt: 'Would you like to enable or disable logs?\n',
+          type: 'boolean'
+        }
+      ]
+    });
+  }
+
+  hasPermission(msg) {
+    return msg.author.id === this.client.options.owner;
+  }
+
+  async run(msg, args) {
+    const settings = await guildSettings.findOne({ where: { guildID: msg.guild.id } }) || await guildSettings.create({ guildID: msg.guild.id });
+    let logs = settings.logs;
+    logs.enabled = args.enabled;
+    settings.logs = logs;
+    await settings.save().catch(console.error);
+    return msg.reply(`logging has been ${args.enabled ? 'enabled' : 'disabled'}.`);
+  }
+};
